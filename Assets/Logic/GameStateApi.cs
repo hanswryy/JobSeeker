@@ -25,8 +25,8 @@ namespace JobGame.Logic
             return _skillLevels.TryGetValue(tag, out level) ? level : 0;
         }
         public IReadOnlyList<ApplicationRecord> Applications { get { return _applications.AsReadOnly(); } }
-        public IInterviewSession ActiveInterview { get { return null; } }
-        public Offer PendingOffer { get { return null; } }
+        public IInterviewSession ActiveInterview { get { return _activeInterview; } }
+        public Offer PendingOffer { get { return _pendingOffer; } }
         public RunSummary Summary { get { return _summary; } }
         public GameConfig Config { get { return _config; } }
 
@@ -41,7 +41,10 @@ namespace JobGame.Logic
             {
                 Tag = tag,
                 CurrentLevel = GetSkillLevel(tag),
-                HintText = "Pilihan upgrade skill"
+                UnlocksJobTitles = GetSkillUnlocks(tag),
+                HintText = GetSkillUnlocks(tag).Count == 0
+                    ? "Belum membuka job baru"
+                    : "Membuka: " + string.Join(", ", GetSkillUnlocks(tag))
             }).ToList().AsReadOnly();
         }
 
@@ -56,7 +59,10 @@ namespace JobGame.Logic
                 .Select(card => new ExperienceOption
                 {
                     Card = card,
-                    HintText = "Pilihan upgrade experience"
+                    UnlocksJobTitles = GetExperienceUnlocks(card),
+                    HintText = GetExperienceUnlocks(card).Count == 0
+                        ? "Belum membuka job baru"
+                        : "Membuka: " + string.Join(", ", GetExperienceUnlocks(card))
                 })
                 .ToList()
                 .AsReadOnly();

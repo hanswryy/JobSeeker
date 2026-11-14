@@ -10,12 +10,17 @@ namespace JobGame.Logic
         {
             _skillOptions.Clear();
             int offset = PositiveModulo(_seed + (_week * 31), AllSkills.Length);
+            List<SkillTag> unlocks = AllSkills
+                .Where(tag => GetSkillUnlocks(tag).Count > 0)
+                .ToList();
             for (int i = 0; i < AllSkills.Length && _skillOptions.Count < 3; i++)
             {
                 SkillTag tag = AllSkills[(offset + i) % AllSkills.Length];
                 if (GetSkillLevel(tag) < _config.MaxSkillLevel)
                     _skillOptions.Add(tag);
             }
+            if (unlocks.Count > 0 && !_skillOptions.Contains(unlocks[0]) && _skillOptions.Count > 0)
+                _skillOptions[_skillOptions.Count - 1] = unlocks[0];
 
             _experienceOptions.Clear();
             if (_content == null || _content.Experiences == null) return;
@@ -25,6 +30,46 @@ namespace JobGame.Logic
                     _experienceOptions.Add(card.Id);
                 if (_experienceOptions.Count == 3) break;
             }
+        }
+
+        List<string> GetSkillUnlocks(SkillTag tag)
+        {
+            if (GetSkillLevel(tag) > 0 || _content == null || _content.Jobs == null)
+                return new List<string>();
+
+            return _content.Jobs
+                .Where(job => job != null && job.MustHave != null)
+                .Where(job => job.MustHave.All(required =>
+                    GetSkillLevel(required) > 0 || required == tag))
+                .Where(job => job.MustHave.Any(required => required == tag))
+                .Select(job => job.Title)
+                .Distinct()
+                .ToList();
+        }
+
+        List<string> GetExperienceUnlocks(ExperienceCard candidate)
+        {
+            if (candidate == null || _content == null || _content.Jobs == null)
+                return new List<string>();
+
+            int currentCredibility = BestExperienceCredibility(_ownedExperiences);
+            List<ExperienceCard> after = new List<ExperienceCard>(_ownedExperiences) { candidate };
+            int nextCredibility = BestExperienceCredibility(after);
+            return _content.Jobs
+                .Where(job => job != null && currentCredibility < job.MinExperience &&
+                    nextCredibility >= job.MinExperience)
+                .Select(job => job.Title)
+                .Distinct()
+                .ToList();
+        }
+
+        static int BestExperienceCredibility(IEnumerable<ExperienceCard> cards)
+        {
+            return cards.Where(card => card != null)
+                .Select(card => Math.Max(0, card.Credibility))
+                .OrderByDescending(value => value)
+                .Take(2)
+                .Sum();
         }
 
         void RefreshPostings()

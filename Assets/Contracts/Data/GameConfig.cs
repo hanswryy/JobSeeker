@@ -30,5 +30,10 @@ namespace JobGame
         public int MatchBaseScore = 50;
         public int MatchNiceToHaveScore = 10;
         public int MatchExperienceScore = 10;
+        public float ApplyEnergyCost = 10f;
+        public float ApplyMentalCost = 3f;
+        public float ScreeningBaseChance = 0.2f;
+        public float ScreeningScoreChance = 0.006f;
+        public float FinalPassChance = 0.75f;
     }
 }

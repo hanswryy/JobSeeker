@@ -18,9 +18,15 @@ namespace JobGame.Logic
         readonly GameConfig _config;
         readonly GameContent _content;
         readonly int _seed;
+        readonly Random _random;
         readonly Dictionary<SkillTag, int> _skillLevels = new Dictionary<SkillTag, int>();
         readonly List<ExperienceCard> _ownedExperiences = new List<ExperienceCard>();
         readonly List<ApplicationRecord> _applications = new List<ApplicationRecord>();
+        readonly Dictionary<string, ApplicationProgress> _applicationProgress =
+            new Dictionary<string, ApplicationProgress>();
+        readonly List<ApplicationRecord> _interviewQueue = new List<ApplicationRecord>();
+        readonly List<ApplicationRecord> _offerQueue = new List<ApplicationRecord>();
+        readonly List<CausalLink> _chain = new List<CausalLink>();
         readonly List<JobPosting> _postings = new List<JobPosting>();
         readonly List<SkillTag> _skillOptions = new List<SkillTag>();
         readonly List<string> _experienceOptions = new List<string>();
@@ -33,12 +39,17 @@ namespace JobGame.Logic
         float _runway;
         MarketEvent _market;
         RunSummary _summary;
+        InterviewSession _activeInterview;
+        Offer _pendingOffer;
+        int _nextApplicationNumber;
+        int _interviewsPlayed;
 
         public GameState(GameContent content, GameConfig config, int seed)
         {
             _content = content;
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _seed = seed;
+            _random = new Random(seed);
             _phase = GamePhase.Planning;
             _week = 1;
             _slotsLeft = Math.Max(0, _config.SlotsPerWeek);
