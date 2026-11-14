@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: 05f632754474dcf408fa9f001de39a03, type: 3}
+  TotalWeeks: 12
+  SlotsPerWeek: 3
+  PostingsPerWeek: 3
+  CvSkillSlots: 4
+  CvExperienceSlots: 2
+  MaxSkillLevel: 5
+  ScreeningLagWeeks: 2
+  StartingEnergy: 80
+  StartingMental: 70
+  StartingRunway: 10
+  SkillUpgradeEnergyCost: 10
+  SkillUpgradeMentalCost: 5
+  ExperienceUpgradeEnergyCost: 8
+  ExperienceUpgradeMentalCost: 3
+  ExperienceUpgradeRunwayGain: 0.5
+  RestEnergyGain: 20
+  RestMentalGain: 10
+  WeeklyEnergyRegen: 20
+  WeeklyMentalCost: 10
+  WeeklyRunwayBurn: 1

@@ -1,0 +1,200 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: GameContent
+  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: 2564fe1da524aca4a92c81c6cd0f2724, type: 3}
+  Jobs:
+  - {fileID: 11400005}
+  - {fileID: 11400006}
+  - {fileID: 11400007}
+  - {fileID: 11400008}
+  - {fileID: 11400009}
+  Experiences:
+  - {fileID: 11400001}
+  - {fileID: 11400002}
+  - {fileID: 11400003}
+  - {fileID: 11400004}
+--- !u!114 &11400001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: exp_kuliah
+  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: 046bf9211f90a1542bca6da79413434e, type: 3}
+  Id: exp_kuliah
+  DisplayName: Proyek Kuliah
+  Description: Proyek kuliah yang membuktikan dasar Git dan REST API.
+  Credibility: 1
+  ProvesTags: 0:
+  - 0
+  - 6
+  OwnedAtStart: 1
+--- !u!114 &11400002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: exp_org
+  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: 046bf9211f90a1542bca6da79413434e, type: 3}
+  Id: exp_org
+  DisplayName: Organisasi Kampus
+  Description: Pengalaman organisasi yang membuktikan komunikasi.
+  Credibility: 1
+  ProvesTags: 0:
+  - 1
+  OwnedAtStart: 0
+--- !u!114 &11400003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: exp_sertifikat
+  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: 046bf9211f90a1542bca6da79413434e, type: 3}
+  Id: exp_sertifikat
+  DisplayName: Sertifikat Online
+  Description: Sertifikat online yang membuktikan SQL dan Python.
+  Credibility: 1
+  ProvesTags: 0:
+  - 2
+  - 3
+  OwnedAtStart: 0
+--- !u!114 &11400004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: exp_magang
+  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: 046bf9211f90a1542bca6da79413434e, type: 3}
+  Id: exp_magang
+  DisplayName: Magang
+  Description: Pengalaman magang yang membuktikan Docker dan REST API.
+  Credibility: 3
+  ProvesTags: 0:
+  - 5
+  - 6
+  OwnedAtStart: 0
+--- !u!114 &11400005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: J01
+  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: 6e691f6c4e552eb49aa5ebf6a14ddcd7, type: 3}
+  Id: J01
+  Title: Backend Intern
+  Company: Warung Kode
+  MustHave: 0:
+  - 0
+  - 6
+  NiceToHave: 0:
+  - 3
+  - 5
+  MinExperience: 0
+  SalaryTier: 1
+  InterviewDifficulty: 1
+  FinalLagWeeks: 1
+  Twist: 
+--- !u!114 &11400006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: J05
+  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: 6e691f6c4e552eb49aa5ebf6a14ddcd7, type: 3}
+  Id: J05
+  Title: Data Analyst
+  Company: Angka Mas
+  MustHave: 0:
+  - 3
+  - 7
+  NiceToHave: 0:
+  - 2
+  - 1
+  MinExperience: 1
+  SalaryTier: 3
+  InterviewDifficulty: 3
+  FinalLagWeeks: 1
+  Twist: 
+--- !u!114 &11400007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: J07
+  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: 6e691f6c4e552eb49aa5ebf6a14ddcd7, type: 3}
+  Id: J07
+  Title: IT Support
+  Company: Sinar Jaya
+  MustHave: 0:
+  - 7
+  - 1
+  NiceToHave: 0:
+  - 3
+  MinExperience: 0
+  SalaryTier: 1
+  InterviewDifficulty: 1
+  FinalLagWeeks: 1
+  Twist: 
+--- !u!114 &11400008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: J08
+  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: 6e691f6c4e552eb49aa5ebf6a14ddcd7, type: 3}
+  Id: J08
+  Title: Fullstack Developer
+  Company: StartupKilat
+  MustHave: 0:
+  - 4
+  - 6
+  NiceToHave: 0:
+  - 3
+  - 0
+  MinExperience: 1
+  SalaryTier: 3
+  InterviewDifficulty: 2
+  FinalLagWeeks: 2
+  Twist: 
+--- !u!114 &11400009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: J09
+  m_EditorClassIdentifier: 
+  m_Script: {fileID: 11500000, guid: 6e691f6c4e552eb49aa5ebf6a14ddcd7, type: 3}
+  Id: J09
+  Title: DevOps Trainee
+  Company: Awan Biru
+  MustHave: 0:
+  - 5
+  - 0
+  NiceToHave: 0:
+  - 2
+  MinExperience: 0
+  SalaryTier: 2
+  InterviewDifficulty: 2
+  FinalLagWeeks: 1
+  Twist: 
