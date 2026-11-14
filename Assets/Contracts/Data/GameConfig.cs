@@ -27,5 +27,8 @@ namespace JobGame
         public float WeeklyEnergyRegen = 20f;
         public float WeeklyMentalCost = 10f;
         public float WeeklyRunwayBurn = 1f;
+        public int MatchBaseScore = 50;
+        public int MatchNiceToHaveScore = 10;
+        public int MatchExperienceScore = 10;
     }
 }
