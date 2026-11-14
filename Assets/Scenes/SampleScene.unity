@@ -223,6 +223,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1888920790}
+  - component: {fileID: 1888920791}
   m_Layer: 0
   m_Name: DebugRun
   m_TagString: Untagged
@@ -245,6 +246,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1888920791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1888920789}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6cf5f6b6e4b74ffba3d40dd7d8f8e6e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  content: {fileID: 11400000, guid: 59165be9ae2747a69bbd5a611be1c8b1, type: 2}
+  config: {fileID: 11400000, guid: 2ef28ad3e6e44d149fa5d99f1dd198d3, type: 2}
+  seed: 42
+  preventRunwayLoss: 1
+  showPostings: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
