@@ -29,3 +29,11 @@ MonoBehaviour:
   WeeklyEnergyRegen: 20
   WeeklyMentalCost: 10
   WeeklyRunwayBurn: 1
+  MatchBaseScore: 50
+  MatchNiceToHaveScore: 10
+  MatchExperienceScore: 10
+  ApplyEnergyCost: 10
+  ApplyMentalCost: 3
+  ScreeningBaseChance: 0.2
+  ScreeningScoreChance: 0.006
+  FinalPassChance: 0.75

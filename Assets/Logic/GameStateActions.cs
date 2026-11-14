@@ -7,11 +7,7 @@ namespace JobGame.Logic
     {
         public ActionResult TryApply(string postingId, CvDraft cv)
         {
-            ActionResult phaseResult = RequirePlanning();
-            if (phaseResult != null) return phaseResult;
-            ActionResult slotResult = RequireSlot();
-            if (slotResult != null) return slotResult;
-            return ActionResult.Fail(ActionError.UnknownId, "Posting belum tersedia.");
+            return TryApplyInternal(postingId, cv);
         }
 
         public ActionResult TryUpgradeSkill(SkillTag tag)
@@ -30,6 +26,8 @@ namespace JobGame.Logic
             _energy = ClampResource(_energy - _config.SkillUpgradeEnergyCost);
             _mental = ClampResource(_mental - _config.SkillUpgradeMentalCost);
             _skillLevels[tag] = GetSkillLevel(tag) + 1;
+            AddChain(ChainKind.Skill, "Minggu " + _week + ": skill " + tag.DisplayName() +
+                " naik ke level " + _skillLevels[tag] + ".");
             EmitResourceChanged(oldEnergy, _energy, ResourceKind.Energy);
             EmitResourceChanged(oldMental, _mental, ResourceKind.Mental);
             if (HoldingsChanged != null) HoldingsChanged();
@@ -55,6 +53,7 @@ namespace JobGame.Logic
             _runway = Math.Max(0f, _runway + _config.ExperienceUpgradeRunwayGain);
             _ownedExperiences.Add(card);
             _experienceOptions.Remove(experienceId);
+            AddChain(ChainKind.Experience, "Minggu " + _week + ": experience " + card.DisplayName + " ditambahkan.");
             EmitResourceChanged(oldEnergy, _energy, ResourceKind.Energy);
             EmitResourceChanged(oldMental, _mental, ResourceKind.Mental);
             EmitResourceChanged(oldRunway, _runway, ResourceKind.Runway);
@@ -109,11 +108,43 @@ namespace JobGame.Logic
             if (SlotsChanged != null) SlotsChanged(_slotsLeft);
             if (MarketChanged != null) MarketChanged(_market);
             if (PostingsChanged != null) PostingsChanged();
+            ProcessDueApplications();
+            AdvancePipelinePhase();
             return ActionResult.Success();
         }
 
-        public ActionResult CloseInterview() { return WrongPhase(); }
-        public ActionResult AcceptOffer() { return WrongPhase(); }
-        public ActionResult DeclineOffer() { return WrongPhase(); }
+        public ActionResult CloseInterview() { return CloseInterviewInternal(); }
+
+        public ActionResult AcceptOffer()
+        {
+            if (_phase != GamePhase.AwaitingOfferDecision || _pendingOffer == null)
+                return WrongPhase();
+
+            ApplicationRecord record = _applications.First(item => item.Id == _pendingOffer.ApplicationId);
+            record.Stage = ApplicationStage.OfferAccepted;
+            record.StatusText = "Offer diterima.";
+            if (ApplicationUpdated != null) ApplicationUpdated(record);
+            Offer acceptedOffer = _pendingOffer;
+            _pendingOffer = null;
+            AddChain(ChainKind.Offer, "Minggu " + _week + ": offer " + record.JobTitle + " diterima.");
+            EndRun(RunOutcome.Won, "Offer: " + acceptedOffer.JobTitle + " di " + acceptedOffer.Company,
+                acceptedOffer);
+            return ActionResult.Success();
+        }
+
+        public ActionResult DeclineOffer()
+        {
+            if (_phase != GamePhase.AwaitingOfferDecision || _pendingOffer == null)
+                return WrongPhase();
+
+            ApplicationRecord record = _applications.First(item => item.Id == _pendingOffer.ApplicationId);
+            record.Stage = ApplicationStage.OfferDeclined;
+            record.StatusText = "Offer ditolak.";
+            if (ApplicationUpdated != null) ApplicationUpdated(record);
+            _offerQueue.RemoveAt(0);
+            _pendingOffer = null;
+            AdvancePipelinePhase();
+            return ActionResult.Success();
+        }
     }
 }

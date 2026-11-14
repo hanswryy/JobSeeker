@@ -263,6 +263,7 @@ MonoBehaviour:
   seed: 42
   preventRunwayLoss: 1
   showPostings: 1
+  showApplications: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
