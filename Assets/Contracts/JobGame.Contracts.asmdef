@@ -1,0 +1,6 @@
+{
+    "name": "JobGame.Contracts",
+    "rootNamespace": "JobGame",
+    "references": [],
+    "autoReferenced": true
+}
