@@ -13561,7 +13561,7 @@ MonoBehaviour:
   runwayValueText: {fileID: 1278037797}
   restButton: {fileID: 1330178702}
   endWeekButton: {fileID: 1252060734}
-  bgmClip: {fileID: 8300000, guid: df064efc03ef2824b8c706831a90daa4, type: 3}
+  bgmClip: {fileID: 8300000, guid: 85f6d3c47f0e16046b82225d7a8ac1b9, type: 3}
   selectSfx: {fileID: 8300000, guid: 6b853d761411e244ea05bfa5cb577e62, type: 3}
   openAppSfx: {fileID: 8300000, guid: b637018efd426d446a8846668f50b9ea, type: 3}
   confirmationSfx: {fileID: 8300000, guid: 12c9f1b5c7dd2a346bbc87fe54b8f64c, type: 3}
@@ -20696,7 +20696,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -12.258179, y: -116}
+  m_AnchoredPosition: {x: -12.258301, y: -116}
   m_SizeDelta: {x: -832.1323, y: -425.2313}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1529422173
