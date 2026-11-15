@@ -29,6 +29,8 @@ namespace JobGame.UI
         [SerializeField] TMP_Text twistValue;
 
         IGameSession _session;
+        IGameSession _lastBoundSession;
+        JobPosting _selectedPosting;
         PanelNavigator _panelNavigator;
         GameObject _cvMakerPanel;
         Button _applyButton;
@@ -36,6 +38,18 @@ namespace JobGame.UI
         readonly Button[] _jobButtons = new Button[MaxVisiblePostings];
         readonly UnityAction[] _jobButtonActions = new UnityAction[MaxVisiblePostings];
         readonly JobPosting[] _visiblePostings = new JobPosting[MaxVisiblePostings];
+
+        public JobPosting SelectedPosting
+        {
+            get
+            {
+                return _selectedPosting != null && !_selectedPosting.Applied
+                    ? _selectedPosting
+                    : null;
+            }
+        }
+
+        public IGameSession BoundSession { get { return _session ?? _lastBoundSession; } }
 
         void Awake()
         {
@@ -235,6 +249,12 @@ namespace JobGame.UI
         void Bind(IGameSession session)
         {
             Unsubscribe(_session);
+            if (session != null && !ReferenceEquals(session, _lastBoundSession))
+            {
+                _selectedPosting = null;
+                _lastBoundSession = session;
+            }
+
             _session = session;
             Subscribe(_session);
             Refresh();
@@ -260,8 +280,12 @@ namespace JobGame.UI
 
         void OnPhaseChanged(GamePhase phase)
         {
-            if (phase != GamePhase.Planning && jobDescriptionPanel != null)
-                jobDescriptionPanel.SetActive(false);
+            if (phase != GamePhase.Planning)
+            {
+                _selectedPosting = null;
+                if (jobDescriptionPanel != null)
+                    jobDescriptionPanel.SetActive(false);
+            }
 
             Refresh();
         }
@@ -275,14 +299,40 @@ namespace JobGame.UI
                     _jobTitleLabels[i].text = string.Empty;
             }
 
-            if (_session == null || _session.Phase != GamePhase.Planning)
+            if (_session == null)
                 return;
+
+            if (_session.Phase != GamePhase.Planning)
+            {
+                _selectedPosting = null;
+                return;
+            }
 
             IReadOnlyList<JobPosting> postings = _session.Postings;
             if (postings == null)
             {
                 Debug.LogError("IGameSession.Postings tidak boleh null.", this);
                 return;
+            }
+
+            if (_selectedPosting != null)
+            {
+                bool selectedPostingAvailable = false;
+                for (int i = 0; i < postings.Count; i++)
+                {
+                    JobPosting posting = postings[i];
+                    if (posting != null &&
+                        string.Equals(posting.Id, _selectedPosting.Id, System.StringComparison.Ordinal) &&
+                        !posting.Applied)
+                    {
+                        selectedPostingAvailable = true;
+                        _selectedPosting = posting;
+                        break;
+                    }
+                }
+
+                if (!selectedPostingAvailable)
+                    _selectedPosting = null;
             }
 
             int labelIndex = 0;
@@ -322,6 +372,7 @@ namespace JobGame.UI
                 return;
             }
 
+            _selectedPosting = _visiblePostings[slot];
             SetLabeledText(jobTitleValue, "Job Title", job.Title);
             SetLabeledText(companyNameValue, "Company Name", job.Company);
             SetLabeledText(
