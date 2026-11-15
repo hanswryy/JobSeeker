@@ -13483,6 +13483,11 @@ MonoBehaviour:
   runwayValueText: {fileID: 1278037797}
   restButton: {fileID: 1330178702}
   endWeekButton: {fileID: 1252060734}
+  bgmClip: {fileID: 8300000, guid: df064efc03ef2824b8c706831a90daa4, type: 3}
+  selectSfx: {fileID: 8300000, guid: 6b853d761411e244ea05bfa5cb577e62, type: 3}
+  openAppSfx: {fileID: 8300000, guid: b637018efd426d446a8846668f50b9ea, type: 3}
+  confirmationSfx: {fileID: 8300000, guid: 12c9f1b5c7dd2a346bbc87fe54b8f64c, type: 3}
+  closeAppSfx: {fileID: 8300000, guid: 15020d6f67a20b14891001b85531fe15, type: 3}
 --- !u!4 &1022907859
 Transform:
   m_ObjectHideFlags: 0

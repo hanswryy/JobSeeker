@@ -24,11 +24,28 @@ namespace JobGame.UI
         [SerializeField] Button restButton;
         [SerializeField] Button endWeekButton;
 
+        [Header("Audio")]
+        [SerializeField] AudioClip bgmClip;
+        [SerializeField] AudioClip selectSfx;
+        [SerializeField] AudioClip openAppSfx;
+        [SerializeField] AudioClip confirmationSfx;
+        [SerializeField] AudioClip closeAppSfx;
+
         IGameSession _session;
         string _message = "Sesi belum dimulai.";
 
         public IGameSession Session { get { return _session; } }
         public event Action<IGameSession> SessionBound;
+
+        void Awake()
+        {
+            AudioManager.Ensure(
+                bgmClip,
+                selectSfx,
+                openAppSfx,
+                confirmationSfx,
+                closeAppSfx);
+        }
 
         void OnEnable()
         {
@@ -43,6 +60,9 @@ namespace JobGame.UI
 
         void Start()
         {
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.InstallButtonSfx();
+
             if (!ValidateSetup())
                 return;
 
