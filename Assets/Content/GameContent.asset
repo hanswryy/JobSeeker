@@ -39,7 +39,7 @@ MonoBehaviour:
   DisplayName: Proyek Kuliah
   Description: Proyek kuliah yang membuktikan dasar Git dan REST API.
   Credibility: 1
-  ProvesTags: 00000000
+  ProvesTags: 0000000006000000
   OwnedAtStart: 1
 --- !u!114 &11400002
 MonoBehaviour:
@@ -57,7 +57,7 @@ MonoBehaviour:
   DisplayName: Organisasi Kampus
   Description: Pengalaman organisasi yang membuktikan komunikasi.
   Credibility: 1
-  ProvesTags: 00000000
+  ProvesTags: 01000000
   OwnedAtStart: 0
 --- !u!114 &11400003
 MonoBehaviour:
@@ -74,8 +74,8 @@ MonoBehaviour:
   Id: exp_sertifikat
   DisplayName: Sertifikat Online
   Description: Sertifikat online yang membuktikan SQL dan Python.
-  Credibility: 1
-  ProvesTags: 00000000
+  Credibility: 2
+  ProvesTags: 0300000002000000
   OwnedAtStart: 0
 --- !u!114 &11400004
 MonoBehaviour:
@@ -93,7 +93,7 @@ MonoBehaviour:
   DisplayName: Magang
   Description: Pengalaman magang yang membuktikan Docker dan REST API.
   Credibility: 3
-  ProvesTags: 00000000
+  ProvesTags: 0500000006000000
   OwnedAtStart: 0
 --- !u!114 &11400005
 MonoBehaviour:
@@ -110,8 +110,8 @@ MonoBehaviour:
   Id: J01
   Title: Backend Intern
   Company: Warung Kode
-  MustHave: 00000000
-  NiceToHave: 00000000
+  MustHave: 0600000000000000
+  NiceToHave: 0200000005000000
   MinExperience: 0
   SalaryTier: 1
   InterviewDifficulty: 1
@@ -132,11 +132,11 @@ MonoBehaviour:
   Id: J05
   Title: Data Analyst
   Company: Angka Mas
-  MustHave: 00000000
-  NiceToHave: 00000000
+  MustHave: 070000000200000003000000
+  NiceToHave: 01000000
   MinExperience: 1
   SalaryTier: 3
-  InterviewDifficulty: 3
+  InterviewDifficulty: 2
   FinalLagWeeks: 1
   Twist: 
 --- !u!114 &11400007
@@ -154,8 +154,8 @@ MonoBehaviour:
   Id: J07
   Title: IT Support
   Company: Sinar Jaya
-  MustHave: 00000000
-  NiceToHave: 00000000
+  MustHave: 07000000
+  NiceToHave: 01000000
   MinExperience: 0
   SalaryTier: 1
   InterviewDifficulty: 1
@@ -176,11 +176,11 @@ MonoBehaviour:
   Id: J08
   Title: Fullstack Developer
   Company: StartupKilat
-  MustHave: 00000000
-  NiceToHave: 00000000
+  MustHave: 06000000040000000200000005000000
+  NiceToHave: 0000000001000000
   MinExperience: 1
-  SalaryTier: 3
-  InterviewDifficulty: 2
+  SalaryTier: 5
+  InterviewDifficulty: 3
   FinalLagWeeks: 2
   Twist: 
 --- !u!114 &11400009
@@ -198,8 +198,8 @@ MonoBehaviour:
   Id: J09
   Title: DevOps Trainee
   Company: Awan Biru
-  MustHave: 00000000
-  NiceToHave: 00000000
+  MustHave: 0500000000000000
+  NiceToHave: 02000000
   MinExperience: 0
   SalaryTier: 2
   InterviewDifficulty: 2
