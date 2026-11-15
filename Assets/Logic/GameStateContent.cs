@@ -6,21 +6,52 @@ namespace JobGame.Logic
 {
     public sealed partial class GameState
     {
+        const int SkillOptionSeedSalt = 104729;
+
         void RefreshWeeklyOptions()
         {
+            List<SkillTag> previousSkills = new List<SkillTag>(_skillOptions);
             _skillOptions.Clear();
-            int offset = PositiveModulo(_seed + (_week * 31), AllSkills.Length);
-            List<SkillTag> unlocks = AllSkills
+
+            List<SkillTag> candidates = AllSkills
+                .Where(tag => GetSkillLevel(tag) < _config.MaxSkillLevel)
+                .ToList();
+            Random random = new Random(CombineSeed(_seed ^ SkillOptionSeedSalt, _week));
+            for (int i = candidates.Count - 1; i > 0; i--)
+            {
+                int swapIndex = random.Next(i + 1);
+                SkillTag swap = candidates[i];
+                candidates[i] = candidates[swapIndex];
+                candidates[swapIndex] = swap;
+            }
+
+            _skillOptions.AddRange(candidates.Take(3));
+            List<SkillTag> unlocks = candidates
                 .Where(tag => GetSkillUnlocks(tag).Count > 0)
                 .ToList();
-            for (int i = 0; i < AllSkills.Length && _skillOptions.Count < 3; i++)
+            if (unlocks.Count > 0 && !_skillOptions.Any(unlocks.Contains))
+                _skillOptions[random.Next(_skillOptions.Count)] = unlocks[random.Next(unlocks.Count)];
+
+            bool sameAsPrevious = previousSkills.Count == _skillOptions.Count &&
+                previousSkills.All(_skillOptions.Contains);
+            if (sameAsPrevious && candidates.Count > _skillOptions.Count)
             {
-                SkillTag tag = AllSkills[(offset + i) % AllSkills.Length];
-                if (GetSkillLevel(tag) < _config.MaxSkillLevel)
-                    _skillOptions.Add(tag);
+                List<SkillTag> alternatives = candidates
+                    .Where(tag => !_skillOptions.Contains(tag))
+                    .ToList();
+                int protectedUnlockIndex = unlocks.Count == 0
+                    ? -1
+                    : _skillOptions.FindIndex(unlocks.Contains);
+                List<int> replaceableIndices = Enumerable.Range(0, _skillOptions.Count)
+                    .Where(index => index != protectedUnlockIndex)
+                    .ToList();
+
+                if (alternatives.Count > 0 && replaceableIndices.Count > 0)
+                {
+                    int index = replaceableIndices[random.Next(replaceableIndices.Count)];
+                    _skillOptions[index] = alternatives[random.Next(alternatives.Count)];
+                }
             }
-            if (unlocks.Count > 0 && !_skillOptions.Contains(unlocks[0]) && _skillOptions.Count > 0)
-                _skillOptions[_skillOptions.Count - 1] = unlocks[0];
 
             _experienceOptions.Clear();
             if (_content == null || _content.Experiences == null) return;
@@ -109,10 +140,5 @@ namespace JobGame.Logic
             unchecked { return seed * 397 ^ week * 7919; }
         }
 
-        static int PositiveModulo(int value, int modulus)
-        {
-            int result = value % modulus;
-            return result < 0 ? result + modulus : result;
-        }
     }
 }
