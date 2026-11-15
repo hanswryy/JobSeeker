@@ -2,6 +2,7 @@ using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using JobGame;
 using JobGame.Logic;
 
@@ -19,6 +20,17 @@ namespace JobGame.UI
         [SerializeField] TMP_Text mentalValueText;
         [SerializeField] Slider energySlider;
         [SerializeField] TMP_Text runwayValueText;
+
+        [Header("Run Result")]
+        [SerializeField] GameObject winPanel;
+        [SerializeField] GameObject losePanel;
+        [SerializeField] TMP_Text winScoreText;
+
+        [Header("Run Result Actions")]
+        [SerializeField] Button winNewRunButton;
+        [SerializeField] Button winQuitButton;
+        [SerializeField] Button loseNewRunButton;
+        [SerializeField] Button loseQuitButton;
 
         [Header("Actions")]
         [SerializeField] Button restButton;
@@ -53,6 +65,14 @@ namespace JobGame.UI
                 restButton.onClick.AddListener(OnRestClicked);
             if (endWeekButton != null)
                 endWeekButton.onClick.AddListener(OnEndWeekClicked);
+            if (winNewRunButton != null)
+                winNewRunButton.onClick.AddListener(OnNewRunClicked);
+            if (loseNewRunButton != null)
+                loseNewRunButton.onClick.AddListener(OnNewRunClicked);
+            if (winQuitButton != null)
+                winQuitButton.onClick.AddListener(OnQuitClicked);
+            if (loseQuitButton != null)
+                loseQuitButton.onClick.AddListener(OnQuitClicked);
 
             Subscribe(_session);
             Refresh();
@@ -76,6 +96,14 @@ namespace JobGame.UI
                 restButton.onClick.RemoveListener(OnRestClicked);
             if (endWeekButton != null)
                 endWeekButton.onClick.RemoveListener(OnEndWeekClicked);
+            if (winNewRunButton != null)
+                winNewRunButton.onClick.RemoveListener(OnNewRunClicked);
+            if (loseNewRunButton != null)
+                loseNewRunButton.onClick.RemoveListener(OnNewRunClicked);
+            if (winQuitButton != null)
+                winQuitButton.onClick.RemoveListener(OnQuitClicked);
+            if (loseQuitButton != null)
+                loseQuitButton.onClick.RemoveListener(OnQuitClicked);
 
             Unsubscribe(_session);
         }
@@ -85,6 +113,13 @@ namespace JobGame.UI
             Unsubscribe(_session);
             _session = session;
             Subscribe(_session);
+            if (_session == null || _session.Summary == null)
+                HideOutcomePanels();
+            else
+            {
+                _message = _session.Summary.Headline;
+                ShowOutcomePanels(_session.Summary);
+            }
             Refresh();
             if (SessionBound != null)
                 SessionBound(_session);
@@ -120,16 +155,45 @@ namespace JobGame.UI
             Execute("Akhiri minggu", _session.EndWeek());
         }
 
+        void OnNewRunClicked()
+        {
+            int sceneBuildIndex = SceneManager.GetActiveScene().buildIndex;
+            if (sceneBuildIndex < 0)
+            {
+                Debug.LogError(
+                    "Scene aktif belum ditambahkan ke Build Settings; tidak dapat memulai ulang.",
+                    this);
+                return;
+            }
+
+            SceneManager.LoadScene(sceneBuildIndex);
+        }
+
+        void OnQuitClicked()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
         bool ValidateSetup()
         {
             if (content == null || config == null ||
                 stateText == null || mentalValueText == null ||
                 energySlider == null || runwayValueText == null ||
+                winPanel == null || losePanel == null || winPanel == losePanel ||
+                winScoreText == null ||
+                winNewRunButton == null || winQuitButton == null ||
+                loseNewRunButton == null || loseQuitButton == null ||
                 restButton == null || endWeekButton == null)
             {
                 Debug.LogError(
                     "SessionHudPresenter: assign GameContent, GameConfig, state/mental/runway text, " +
-                    "Energy Slider, serta tombol Istirahat dan End Week di Inspector.",
+                    "Energy Slider, Win Panel, Lose Panel yang berbeda, Text Score di Win Panel, " +
+                    "tombol New Run dan Quit pada kedua panel hasil, serta tombol Istirahat dan " +
+                    "End Week di Inspector.",
                     this);
                 return false;
             }
@@ -252,8 +316,57 @@ namespace JobGame.UI
 
         void OnRunEnded(RunSummary summary)
         {
+            if (summary == null)
+            {
+                Debug.LogError("RunEnded mengirim summary kosong.", this);
+                return;
+            }
+
             _message = summary.Headline;
+            ShowOutcomePanels(summary);
             Refresh();
+        }
+
+        void HideOutcomePanels()
+        {
+            if (winPanel != null)
+                winPanel.SetActive(false);
+            if (losePanel != null)
+                losePanel.SetActive(false);
+            SetText(winScoreText, string.Empty);
+        }
+
+        void ShowOutcomePanels(RunSummary summary)
+        {
+            if (winPanel == null || losePanel == null || winScoreText == null)
+            {
+                Debug.LogError(
+                    "SessionHudPresenter: assign Win Panel, Lose Panel, dan Text Score di Win Panel " +
+                    "di Inspector.",
+                    this);
+                return;
+            }
+            if (winPanel == losePanel)
+            {
+                Debug.LogError("Win Panel dan Lose Panel harus GameObject yang berbeda.", this);
+                return;
+            }
+
+            bool won = summary.Outcome == RunOutcome.Won;
+            bool lost = summary.Outcome == RunOutcome.LostRunway ||
+                summary.Outcome == RunOutcome.LostMental ||
+                summary.Outcome == RunOutcome.LostTimeUp;
+            if (!won && !lost)
+            {
+                Debug.LogError("RunOutcome tidak dikenali: " + summary.Outcome + ".", this);
+                HideOutcomePanels();
+                return;
+            }
+
+            SetText(winScoreText, won ? "Skor akhir: " + summary.FinalScore : string.Empty);
+            winPanel.SetActive(won);
+            losePanel.SetActive(lost);
+            (won ? winPanel : losePanel).transform.SetAsLastSibling();
         }
     }
 }

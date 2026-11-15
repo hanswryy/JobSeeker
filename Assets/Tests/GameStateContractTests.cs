@@ -54,6 +54,8 @@ namespace JobGame.Tests
                 Is.EqualTo(ActionError.NotOffered));
             Assert.That(CreateSession(1).TryUpgradeExperience("missing").Error,
                 Is.EqualTo(ActionError.NotOffered));
+            Assert.That(CreateSession(1).DeclineInterview().Error,
+                Is.EqualTo(ActionError.WrongPhase));
             Assert.That(CreateSession(1).CloseInterview().Error,
                 Is.EqualTo(ActionError.WrongPhase));
             Assert.That(CreateSession(1).AcceptOffer().Error,
@@ -89,6 +91,7 @@ namespace JobGame.Tests
             Assert.That(session.TryUpgradeExperience("missing").Error, Is.EqualTo(ActionError.RunEnded));
             Assert.That(session.TryRest().Error, Is.EqualTo(ActionError.RunEnded));
             Assert.That(session.EndWeek().Error, Is.EqualTo(ActionError.RunEnded));
+            Assert.That(session.DeclineInterview().Error, Is.EqualTo(ActionError.RunEnded));
             Assert.That(session.CloseInterview().Error, Is.EqualTo(ActionError.RunEnded));
             Assert.That(session.AcceptOffer().Error, Is.EqualTo(ActionError.RunEnded));
             Assert.That(session.DeclineOffer().Error, Is.EqualTo(ActionError.RunEnded));

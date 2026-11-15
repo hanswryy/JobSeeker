@@ -8,12 +8,15 @@ namespace JobGame.Logic
     {
         public bool ScreeningPassed;
         public bool FinalPassed;
+        public int InterviewSeed;
         public Dictionary<SkillTag, int> SkillLevels;
         public JobTemplate Job;
     }
 
     public sealed partial class GameState
     {
+        const int InterviewQuestionSeedSalt = 1618033;
+
         public ActionResult TryApplyInternal(string postingId, CvDraft cv)
         {
             ActionResult phaseResult = RequirePlanning();
@@ -53,6 +56,7 @@ namespace JobGame.Logic
             {
                 ScreeningPassed = !match.IsRejected && RollScreening(match.Score),
                 FinalPassed = false,
+                InterviewSeed = CombineSeed(_seed ^ InterviewQuestionSeedSalt, _nextApplicationNumber),
                 SkillLevels = new Dictionary<SkillTag, int>(_skillLevels),
                 Job = posting.Template
             };
@@ -95,6 +99,25 @@ namespace JobGame.Logic
                 AddChain(ChainKind.Failure, "Minggu " + _week + ": interview " + record.JobTitle + " gagal.");
             }
             _interviewsPlayed++;
+            if (ApplicationUpdated != null) ApplicationUpdated(record);
+            _activeInterview = null;
+            AdvancePipelinePhase();
+            return ActionResult.Success();
+        }
+
+        public ActionResult DeclineInterviewInternal()
+        {
+            if (_phase != GamePhase.AwaitingInterview || _activeInterview == null ||
+                _activeInterview.IsFinished || _interviewQueue.Count == 0)
+                return WrongPhase();
+
+            ApplicationRecord record = _interviewQueue[0];
+            _interviewQueue.RemoveAt(0);
+            record.Stage = ApplicationStage.Rejected;
+            record.RejectedAt = RejectStage.Interview;
+            record.StatusText = "Undangan interview ditolak.";
+            AddChain(ChainKind.Failure,
+                "Minggu " + _week + ": undangan interview " + record.JobTitle + " ditolak.");
             if (ApplicationUpdated != null) ApplicationUpdated(record);
             _activeInterview = null;
             AdvancePipelinePhase();
@@ -211,8 +234,9 @@ namespace JobGame.Logic
 
         InterviewSession CreateInterview(ApplicationRecord record)
         {
-            return new InterviewSession(_applicationProgress[record.Id].Job, record.CvSnapshot,
-                _applicationProgress[record.Id].SkillLevels);
+            ApplicationProgress progress = _applicationProgress[record.Id];
+            return new InterviewSession(progress.Job, record.CvSnapshot,
+                progress.SkillLevels, progress.InterviewSeed);
         }
 
         Offer CreateOffer(ApplicationRecord record)

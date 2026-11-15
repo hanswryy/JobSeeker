@@ -1,6 +1,6 @@
 namespace JobGame
 {
-    public static class ContractInfo { public const string Version = "1.0"; }
+    public static class ContractInfo { public const string Version = "1.1"; }
 
     public enum SkillTag { Git, Komunikasi, Python, SQL, JavaScript, Docker, RestApi, Excel }
     public enum ActionType { Apply, UpgradeSkill, UpgradeExperience, Rest }

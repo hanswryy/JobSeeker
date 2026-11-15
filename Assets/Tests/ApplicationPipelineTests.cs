@@ -40,6 +40,7 @@ namespace JobGame.Tests
             IInterviewSession interview = session.ActiveInterview;
             Assert.That(interview.Answer(CardRef.ForSkill(SkillTag.Git)), Is.Not.Null);
             Assert.That(interview.IsFinished, Is.True);
+            Assert.That(session.DeclineInterview().Error, Is.EqualTo(ActionError.WrongPhase));
             Assert.That(session.CloseInterview().Ok, Is.True);
             Assert.That(session.Applications[0].Stage, Is.EqualTo(ApplicationStage.FinalReview));
 
@@ -89,6 +90,83 @@ namespace JobGame.Tests
             Assert.That(session.Applications.Where(item => item.Stage == ApplicationStage.FinalReview).Count(),
                 Is.EqualTo(2));
             Assert.That(session.Summary, Is.Null);
+        }
+
+        [Test]
+        public void DecliningInterviewRejectsApplicationAndReturnsToPlanning()
+        {
+            GameConfig config = CreateConfig();
+            config.ScreeningBaseChance = 1f;
+            config.ScreeningLagWeeks = 0;
+            IGameSession session = CreateSession(config, SkillTag.Git);
+            Assert.That(session.TryApply(session.Postings[0].Id, CvWith(SkillTag.Git)).Ok, Is.True);
+            EndToWeek(session, 2);
+
+            ApplicationRecord application = session.Applications[0];
+            Assert.That(session.Phase, Is.EqualTo(GamePhase.AwaitingInterview));
+            Assert.That(session.DeclineInterview().Ok, Is.True);
+
+            Assert.That(application.Stage, Is.EqualTo(ApplicationStage.Rejected));
+            Assert.That(application.RejectedAt, Is.EqualTo(RejectStage.Interview));
+            Assert.That(application.StatusText, Is.EqualTo("Undangan interview ditolak."));
+            Assert.That(session.ActiveInterview, Is.Null);
+            Assert.That(session.Phase, Is.EqualTo(GamePhase.Planning));
+            Assert.That(session.Summary, Is.Null);
+        }
+
+        [Test]
+        public void DecliningInterviewStartsNextQueuedInvitation()
+        {
+            GameConfig config = CreateConfig();
+            config.PostingsPerWeek = 2;
+            config.ScreeningBaseChance = 1f;
+            config.ScreeningLagWeeks = 0;
+            IGameSession session = CreateSession(config, SkillTag.Git, 2);
+            Assert.That(session.TryApply(session.Postings[0].Id, CvWith(SkillTag.Git)).Ok, Is.True);
+            Assert.That(session.TryApply(session.Postings[1].Id, CvWith(SkillTag.Git)).Ok, Is.True);
+            EndToWeek(session, 2);
+            List<string> startedInterviewTitles = new List<string>();
+            session.InterviewStarted += delegate(IInterviewSession interview)
+            {
+                startedInterviewTitles.Add(interview.JobTitle);
+            };
+
+            Assert.That(session.ActiveInterview.JobTitle, Is.EqualTo("Pekerjaan Uji 0"));
+            ApplicationRecord declinedApplication =
+                session.Applications.Single(item => item.JobTitle == "Pekerjaan Uji 0");
+            Assert.That(session.DeclineInterview().Ok, Is.True);
+
+            Assert.That(declinedApplication.Stage, Is.EqualTo(ApplicationStage.Rejected));
+            Assert.That(session.Phase, Is.EqualTo(GamePhase.AwaitingInterview));
+            Assert.That(session.ActiveInterview.JobTitle, Is.EqualTo("Pekerjaan Uji 1"));
+            CollectionAssert.AreEqual(new[] { "Pekerjaan Uji 1" }, startedInterviewTitles);
+
+            Assert.That(session.DeclineInterview().Ok, Is.True);
+            Assert.That(session.Phase, Is.EqualTo(GamePhase.Planning));
+            Assert.That(session.ActiveInterview, Is.Null);
+        }
+
+        [Test]
+        public void InterviewQuestionsAreRandomizedAndDeterministicPerSeed()
+        {
+            GameConfig config = CreateConfig();
+            config.ScreeningBaseChance = 1f;
+            config.ScreeningLagWeeks = 0;
+            GameContent content = CreateContent(new[] { SkillTag.Git });
+            content.Jobs[0].NiceToHave = new[]
+            {
+                SkillTag.Komunikasi, SkillTag.Python, SkillTag.SQL,
+                SkillTag.Docker, SkillTag.Excel
+            };
+
+            string firstRun = GetInterviewQuestionSignature(content, config, 23);
+            Assert.That(GetInterviewQuestionSignature(content, config, 23), Is.EqualTo(firstRun));
+
+            HashSet<string> signatures = new HashSet<string> { firstRun };
+            for (int seed = 24; seed < 36; seed++)
+                signatures.Add(GetInterviewQuestionSignature(content, config, seed));
+
+            Assert.That(signatures.Count, Is.GreaterThan(1));
         }
 
         [Test]
@@ -244,6 +322,20 @@ namespace JobGame.Tests
             IGameFactory factory = (IGameFactory)Activator.CreateInstance(
                 factoryType, new object[] { content, config });
             return factory.NewRun(seed);
+        }
+
+        string GetInterviewQuestionSignature(GameContent content, GameConfig config, int seed)
+        {
+            IGameSession session = CreateSession(content, config, seed);
+            Assert.That(session.TryApply(session.Postings[0].Id, CvWith(SkillTag.Git)).Ok, Is.True);
+            EndToWeek(session, 2);
+
+            IInterviewSession interview = session.ActiveInterview;
+            Assert.That(interview.Questions.Count, Is.EqualTo(3));
+            Assert.That(interview.Questions.Select(question => question.Topic).Distinct().Count(),
+                Is.EqualTo(3));
+            return string.Join("|", interview.Questions.Select(question =>
+                question.Topic + ":" + question.Prompt));
         }
 
         GameContent CreateContent(SkillTag[] requiredSkills, int jobCount = 1)

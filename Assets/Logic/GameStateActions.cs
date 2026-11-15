@@ -113,6 +113,8 @@ namespace JobGame.Logic
             return ActionResult.Success();
         }
 
+        public ActionResult DeclineInterview() { return DeclineInterviewInternal(); }
+
         public ActionResult CloseInterview() { return CloseInterviewInternal(); }
 
         public ActionResult AcceptOffer()

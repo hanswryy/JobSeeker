@@ -41,6 +41,7 @@ namespace JobGame
         ActionResult TryUpgradeExperience(string experienceId);    // 1 slot
         ActionResult TryRest();                                    // 1 slot
         ActionResult EndWeek();                                    // slot sisa hangus
+        ActionResult DeclineInterview();                           // fase AwaitingInterview
         ActionResult CloseInterview();                             // fase AwaitingInterview
         ActionResult AcceptOffer();                                // fase AwaitingOfferDecision
         ActionResult DeclineOffer();                               // fase AwaitingOfferDecision

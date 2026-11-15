@@ -6,6 +6,13 @@ namespace JobGame.Logic
 {
     sealed class InterviewSession : IInterviewSession
     {
+        static readonly string[] QuestionTemplates =
+        {
+            "Ceritakan pengalaman Anda menggunakan {0}.",
+            "Bagaimana Anda menerapkan {0} untuk menyelesaikan masalah?",
+            "Apa tantangan yang pernah Anda hadapi saat menggunakan {0}?"
+        };
+
         readonly IReadOnlyList<InterviewQuestion> _questions;
         readonly IReadOnlyList<CardRef> _availableCards;
         readonly Dictionary<SkillTag, int> _skillLevels;
@@ -17,7 +24,11 @@ namespace JobGame.Logic
         int _weakCount;
         InterviewResult _result;
 
-        public InterviewSession(JobTemplate job, CvDraft cv, Dictionary<SkillTag, int> skillLevels)
+        public InterviewSession(
+            JobTemplate job,
+            CvDraft cv,
+            Dictionary<SkillTag, int> skillLevels,
+            int questionSeed)
         {
             JobTitle = job.Title;
             Company = job.Company;
@@ -25,7 +36,7 @@ namespace JobGame.Logic
             _skillLevels = new Dictionary<SkillTag, int>(skillLevels);
             _experiences = (cv.Experiences ?? new List<ExperienceCard>()).AsReadOnly();
             _availableCards = BuildAvailableCards(cv).AsReadOnly();
-            _questions = BuildQuestions(job).AsReadOnly();
+            _questions = BuildQuestions(job, new Random(questionSeed)).AsReadOnly();
         }
 
         public string JobTitle { get; private set; }
@@ -79,7 +90,7 @@ namespace JobGame.Logic
             return cards;
         }
 
-        List<InterviewQuestion> BuildQuestions(JobTemplate job)
+        List<InterviewQuestion> BuildQuestions(JobTemplate job, Random random)
         {
             List<SkillTag> topics = new List<SkillTag>();
             AddDistinct(topics, job.MustHave);
@@ -87,15 +98,26 @@ namespace JobGame.Logic
             if (topics.Count == 0)
                 topics.Add(SkillTag.Git);
 
+            for (int i = topics.Count - 1; i > 0; i--)
+            {
+                int swapIndex = random.Next(i + 1);
+                SkillTag swap = topics[i];
+                topics[i] = topics[swapIndex];
+                topics[swapIndex] = swap;
+            }
+
             int questionCount = Math.Min(3, topics.Count);
             List<InterviewQuestion> questions = new List<InterviewQuestion>();
             for (int i = 0; i < questionCount; i++)
             {
+                string topicName = topics[i].DisplayName();
                 questions.Add(new InterviewQuestion
                 {
                     Index = i,
                     Topic = topics[i],
-                    Prompt = "Ceritakan pengalaman Anda menggunakan " + topics[i].DisplayName() + "."
+                    Prompt = string.Format(
+                        QuestionTemplates[random.Next(QuestionTemplates.Length)],
+                        topicName)
                 });
             }
             return questions;
