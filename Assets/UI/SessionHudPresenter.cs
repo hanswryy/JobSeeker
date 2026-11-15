@@ -20,6 +20,7 @@ namespace JobGame.UI
         [SerializeField] TMP_Text mentalValueText;
         [SerializeField] Slider energySlider;
         [SerializeField] TMP_Text runwayValueText;
+        [SerializeField] GameObject slotAlertPanel;
 
         [Header("Run Result")]
         [SerializeField] GameObject winPanel;
@@ -59,6 +60,7 @@ namespace JobGame.UI
         void Awake()
         {
             HideConfirmationPanel();
+            SetSlotAlertVisible(false);
 
             AudioManager.Ensure(
                 bgmClip,
@@ -248,7 +250,7 @@ namespace JobGame.UI
         {
             if (content == null || config == null ||
                 stateText == null || mentalValueText == null ||
-                energySlider == null || runwayValueText == null ||
+                energySlider == null || runwayValueText == null || slotAlertPanel == null ||
                 winPanel == null || losePanel == null || winPanel == losePanel ||
                 winScoreText == null ||
                 confirmationPanel == null ||
@@ -260,7 +262,8 @@ namespace JobGame.UI
             {
                 Debug.LogError(
                     "SessionHudPresenter: assign GameContent, GameConfig, state/mental/runway text, " +
-                    "Energy Slider, Win Panel, Lose Panel yang berbeda, Text Score di Win Panel, " +
+                    "Energy Slider, Slot Alert Panel, Win Panel, Lose Panel yang berbeda, " +
+                    "Text Score di Win Panel, " +
                     "tombol New Run dan Quit pada kedua panel hasil, serta tombol Istirahat dan " +
                     "End Week, Confirmation Panel, panel warning UTUBE/Sleep, dan tombol konfirmasi Yes " +
                     "UTUBE/Sleep di Inspector.",
@@ -293,6 +296,10 @@ namespace JobGame.UI
 
         void Refresh()
         {
+            bool showSlotAlert = _session != null &&
+                _session.Phase == GamePhase.Planning && _session.SlotsLeft <= 0;
+            SetSlotAlertVisible(showSlotAlert);
+
             if (_session == null)
             {
                 SetText(stateText, _message);
@@ -323,6 +330,16 @@ namespace JobGame.UI
 
             bool planning = _session.Phase == GamePhase.Planning;
             SetActionAvailability(planning && _session.SlotsLeft > 0, planning);
+        }
+
+        void SetSlotAlertVisible(bool visible)
+        {
+            if (slotAlertPanel == null || slotAlertPanel.activeSelf == visible)
+                return;
+
+            slotAlertPanel.SetActive(visible);
+            if (visible)
+                slotAlertPanel.transform.SetAsLastSibling();
         }
 
         void SetActionAvailability(bool canAct, bool canEndWeek)
