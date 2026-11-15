@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -151,6 +152,39 @@ namespace JobGame.Tests
                 Assert.That(first.EndWeek().Ok, Is.True);
                 Assert.That(second.EndWeek().Ok, Is.True);
                 AssertEquivalentState(first, second);
+            }
+        }
+
+        [Test]
+        public void SkillOptionsChangeEachWeekAndRemainDeterministicForTheSameSeed()
+        {
+            IGameSession first = CreateSession(123);
+            IGameSession second = CreateSession(123);
+            List<SkillTag> previousSkills = first.GetSkillOptions()
+                .Select(option => option.Tag)
+                .ToList();
+
+            for (int week = 0; week < 5; week++)
+            {
+                List<SkillTag> firstSkills = first.GetSkillOptions()
+                    .Select(option => option.Tag)
+                    .ToList();
+                List<SkillTag> secondSkills = second.GetSkillOptions()
+                    .Select(option => option.Tag)
+                    .ToList();
+
+                Assert.That(firstSkills.Count, Is.EqualTo(3));
+                Assert.That(firstSkills.Distinct().Count(), Is.EqualTo(3));
+                CollectionAssert.AreEqual(firstSkills, secondSkills);
+                if (week > 0)
+                    CollectionAssert.AreNotEquivalent(previousSkills, firstSkills);
+
+                previousSkills = firstSkills;
+                if (week < 4)
+                {
+                    Assert.That(first.EndWeek().Ok, Is.True);
+                    Assert.That(second.EndWeek().Ok, Is.True);
+                }
             }
         }
 
