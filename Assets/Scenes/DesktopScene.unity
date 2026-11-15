@@ -2087,7 +2087,7 @@ GameObject:
   - component: {fileID: 191833340}
   - component: {fileID: 191833343}
   m_Layer: 5
-  m_Name: UTUBE
+  m_Name: Rest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3986,7 +3986,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Proceed To Watch UTUBE?
+  m_text: Proceed To Next Week?
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
   m_sharedMaterial: {fileID: 3040108758198482946, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
@@ -5151,7 +5151,7 @@ GameObject:
   - component: {fileID: 384256490}
   - component: {fileID: 384256489}
   m_Layer: 5
-  m_Name: Sleep Warning Panel
+  m_Name: Advance Week Warning Panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15850,6 +15850,11 @@ MonoBehaviour:
   loseQuitButton: {fileID: 1384273691}
   restButton: {fileID: 191833343}
   endWeekButton: {fileID: 1452624207}
+  confirmationPanel: {fileID: 1943053276}
+  utubeWarningPanel: {fileID: 1745102442}
+  utubeConfirmButton: {fileID: 1330178702}
+  sleepWarningPanel: {fileID: 384256488}
+  sleepConfirmButton: {fileID: 1252060734}
   bgmClip: {fileID: 8300000, guid: 85f6d3c47f0e16046b82225d7a8ac1b9, type: 3}
   selectSfx: {fileID: 8300000, guid: 6b853d761411e244ea05bfa5cb577e62, type: 3}
   openAppSfx: {fileID: 8300000, guid: b637018efd426d446a8846668f50b9ea, type: 3}
@@ -15882,7 +15887,7 @@ GameObject:
   - component: {fileID: 1023652872}
   - component: {fileID: 1023652871}
   m_Layer: 5
-  m_Name: UTUBE
+  m_Name: Rest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15927,7 +15932,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: UTUBE
+  m_text: UTUBE (Rest)
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
   m_sharedMaterial: {fileID: 3040108758198482946, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
@@ -17660,7 +17665,7 @@ GameObject:
   - component: {fileID: 1142053990}
   - component: {fileID: 1142053989}
   m_Layer: 5
-  m_Name: Sleep
+  m_Name: Advance Week
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -17705,7 +17710,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Sleep
+  m_text: Advance Week
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
   m_sharedMaterial: {fileID: 3040108758198482946, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
@@ -22002,7 +22007,7 @@ GameObject:
   - component: {fileID: 1452624209}
   - component: {fileID: 1452624207}
   m_Layer: 5
-  m_Name: Sleep
+  m_Name: Advance Week
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -22051,31 +22056,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1452624208}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1854349208}
-        m_TargetAssemblyTypeName: PanelNavigator, Assembly-CSharp
-        m_MethodName: ShowOnly
-        m_Mode: 2
-        m_Arguments:
-          m_ObjectArgument: {fileID: 1943053276}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1854349208}
-        m_TargetAssemblyTypeName: PanelNavigator, Assembly-CSharp
-        m_MethodName: ShowOnly
-        m_Mode: 2
-        m_Arguments:
-          m_ObjectArgument: {fileID: 384256488}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1452624208
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27189,7 +27170,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: YES, I'm bored rn
+  m_text: YES, I'm tired
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
   m_sharedMaterial: {fileID: 3040108758198482946, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
@@ -27517,7 +27498,7 @@ GameObject:
   - component: {fileID: 1745102445}
   - component: {fileID: 1745102444}
   m_Layer: 5
-  m_Name: UTUBE Warning Panel
+  m_Name: Rest Warning Panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29673,7 +29654,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: You will skip one phase but your mental will be better.
+  m_text: You will skip one week but your energy will be better.
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
   m_sharedMaterial: {fileID: 3040108758198482946, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
@@ -32551,7 +32532,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: YES, I'm bored rn
+  m_text: YES, bring me there
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
   m_sharedMaterial: {fileID: 3040108758198482946, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
@@ -34726,7 +34707,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Proceed To Watch UTUBE?
+  m_text: Proceed To Rest?
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
   m_sharedMaterial: {fileID: 3040108758198482946, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
