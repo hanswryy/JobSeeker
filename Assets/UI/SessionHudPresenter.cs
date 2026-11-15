@@ -36,6 +36,13 @@ namespace JobGame.UI
         [SerializeField] Button restButton;
         [SerializeField] Button endWeekButton;
 
+        [Header("Action Confirmations")]
+        [SerializeField] GameObject confirmationPanel;
+        [SerializeField] GameObject utubeWarningPanel;
+        [SerializeField] Button utubeConfirmButton;
+        [SerializeField] GameObject sleepWarningPanel;
+        [SerializeField] Button sleepConfirmButton;
+
         [Header("Audio")]
         [SerializeField] AudioClip bgmClip;
         [SerializeField] AudioClip selectSfx;
@@ -51,6 +58,8 @@ namespace JobGame.UI
 
         void Awake()
         {
+            HideConfirmationPanel();
+
             AudioManager.Ensure(
                 bgmClip,
                 selectSfx,
@@ -65,6 +74,10 @@ namespace JobGame.UI
                 restButton.onClick.AddListener(OnRestClicked);
             if (endWeekButton != null)
                 endWeekButton.onClick.AddListener(OnEndWeekClicked);
+            if (utubeConfirmButton != null)
+                utubeConfirmButton.onClick.AddListener(OnRestConfirmedClicked);
+            if (sleepConfirmButton != null)
+                sleepConfirmButton.onClick.AddListener(OnSleepConfirmedClicked);
             if (winNewRunButton != null)
                 winNewRunButton.onClick.AddListener(OnNewRunClicked);
             if (loseNewRunButton != null)
@@ -96,6 +109,10 @@ namespace JobGame.UI
                 restButton.onClick.RemoveListener(OnRestClicked);
             if (endWeekButton != null)
                 endWeekButton.onClick.RemoveListener(OnEndWeekClicked);
+            if (utubeConfirmButton != null)
+                utubeConfirmButton.onClick.RemoveListener(OnRestConfirmedClicked);
+            if (sleepConfirmButton != null)
+                sleepConfirmButton.onClick.RemoveListener(OnSleepConfirmedClicked);
             if (winNewRunButton != null)
                 winNewRunButton.onClick.RemoveListener(OnNewRunClicked);
             if (loseNewRunButton != null)
@@ -112,6 +129,7 @@ namespace JobGame.UI
         {
             Unsubscribe(_session);
             _session = session;
+            HideConfirmationPanel();
             Subscribe(_session);
             if (_session == null || _session.Summary == null)
                 HideOutcomePanels();
@@ -144,7 +162,20 @@ namespace JobGame.UI
             if (_session == null)
                 return;
 
-            Execute("Istirahat", _session.TryRest());
+            OpenConfirmation(utubeWarningPanel, sleepWarningPanel);
+        }
+
+        void OnRestConfirmedClicked()
+        {
+            if (_session == null)
+            {
+                Debug.LogError("Tidak dapat mengonfirmasi UTUBE karena sesi belum dimulai.", this);
+                HideConfirmationPanel();
+                return;
+            }
+
+            Execute("Menonton UTUBE", _session.TryRest());
+            HideConfirmationPanel();
         }
 
         public void OnEndWeekClicked()
@@ -152,7 +183,42 @@ namespace JobGame.UI
             if (_session == null)
                 return;
 
-            Execute("Akhiri minggu", _session.EndWeek());
+            OpenConfirmation(sleepWarningPanel, utubeWarningPanel);
+        }
+
+        void OnSleepConfirmedClicked()
+        {
+            if (_session == null)
+            {
+                Debug.LogError("Tidak dapat mengonfirmasi Sleep karena sesi belum dimulai.", this);
+                HideConfirmationPanel();
+                return;
+            }
+
+            Execute("Tidur", _session.EndWeek());
+            HideConfirmationPanel();
+        }
+
+        void OpenConfirmation(GameObject warningPanel, GameObject otherWarningPanel)
+        {
+            if (confirmationPanel == null || warningPanel == null || otherWarningPanel == null)
+            {
+                Debug.LogError(
+                    "SessionHudPresenter: assign Confirmation Panel serta panel konfirmasi UTUBE dan Sleep.",
+                    this);
+                return;
+            }
+
+            otherWarningPanel.SetActive(false);
+            warningPanel.SetActive(true);
+            confirmationPanel.SetActive(true);
+            confirmationPanel.transform.SetAsLastSibling();
+        }
+
+        void HideConfirmationPanel()
+        {
+            if (confirmationPanel != null)
+                confirmationPanel.SetActive(false);
         }
 
         void OnNewRunClicked()
@@ -185,6 +251,9 @@ namespace JobGame.UI
                 energySlider == null || runwayValueText == null ||
                 winPanel == null || losePanel == null || winPanel == losePanel ||
                 winScoreText == null ||
+                confirmationPanel == null ||
+                utubeWarningPanel == null || utubeConfirmButton == null ||
+                sleepWarningPanel == null || sleepConfirmButton == null ||
                 winNewRunButton == null || winQuitButton == null ||
                 loseNewRunButton == null || loseQuitButton == null ||
                 restButton == null || endWeekButton == null)
@@ -193,7 +262,8 @@ namespace JobGame.UI
                     "SessionHudPresenter: assign GameContent, GameConfig, state/mental/runway text, " +
                     "Energy Slider, Win Panel, Lose Panel yang berbeda, Text Score di Win Panel, " +
                     "tombol New Run dan Quit pada kedua panel hasil, serta tombol Istirahat dan " +
-                    "End Week di Inspector.",
+                    "End Week, Confirmation Panel, panel warning UTUBE/Sleep, dan tombol konfirmasi Yes " +
+                    "UTUBE/Sleep di Inspector.",
                     this);
                 return false;
             }
@@ -259,6 +329,10 @@ namespace JobGame.UI
         {
             if (restButton != null)
                 restButton.interactable = canAct;
+            if (utubeConfirmButton != null)
+                utubeConfirmButton.interactable = canAct;
+            if (sleepConfirmButton != null)
+                sleepConfirmButton.interactable = canEndWeek;
             if (endWeekButton != null)
                 endWeekButton.interactable = canEndWeek;
         }
