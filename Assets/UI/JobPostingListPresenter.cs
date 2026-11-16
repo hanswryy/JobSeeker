@@ -33,6 +33,7 @@ namespace JobGame.UI
         JobPosting _selectedPosting;
         PanelNavigator _panelNavigator;
         GameObject _cvMakerPanel;
+        CvMakerCategoryPresenter _cvMakerPresenter;
         Button _applyButton;
         readonly TMP_Text[] _jobTitleLabels = new TMP_Text[MaxVisiblePostings];
         readonly Button[] _jobButtons = new Button[MaxVisiblePostings];
@@ -72,6 +73,7 @@ namespace JobGame.UI
                 Debug.LogError("Panel CV Maker tidak ditemukan di scene.", this);
             else
                 _cvMakerPanel = cvMakerTransform.gameObject;
+            _cvMakerPresenter = FindSceneComponent<CvMakerCategoryPresenter>();
 
             if (jobBoxes == null || jobBoxes.Length != MaxVisiblePostings)
             {
@@ -256,6 +258,8 @@ namespace JobGame.UI
             }
 
             _session = session;
+            if (_session == null)
+                _selectedPosting = null;
             Subscribe(_session);
             Refresh();
         }
@@ -300,7 +304,11 @@ namespace JobGame.UI
             }
 
             if (_session == null)
+            {
+                if (jobDescriptionPanel != null)
+                    jobDescriptionPanel.SetActive(false);
                 return;
+            }
 
             if (_session.Phase != GamePhase.Planning)
             {
@@ -332,7 +340,11 @@ namespace JobGame.UI
                 }
 
                 if (!selectedPostingAvailable)
+                {
                     _selectedPosting = null;
+                    if (jobDescriptionPanel != null)
+                        jobDescriptionPanel.SetActive(false);
+                }
             }
 
             int labelIndex = 0;
@@ -403,6 +415,10 @@ namespace JobGame.UI
                 return;
             }
 
+            if (jobDescriptionPanel != null)
+                jobDescriptionPanel.SetActive(false);
+            if (_cvMakerPresenter != null)
+                _cvMakerPresenter.ResetDraftForNewPosting();
             _panelNavigator.ShowOnly(_cvMakerPanel);
         }
 

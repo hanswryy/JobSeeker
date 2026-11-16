@@ -80,6 +80,12 @@ namespace JobGame.UI
                     : new Color(0.11f, 0.36f, 0.25f, 0.9f);
         }
 
+        internal void SetInstructionVisible(bool visible)
+        {
+            if (_instruction != null)
+                _instruction.gameObject.SetActive(visible);
+        }
+
         public void OnDrop(PointerEventData eventData)
         {
             if (_presenter == null)

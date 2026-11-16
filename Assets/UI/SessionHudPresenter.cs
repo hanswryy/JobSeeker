@@ -1,3 +1,4 @@
+using System.Collections;
 using System;
 using TMPro;
 using UnityEngine;
@@ -53,6 +54,18 @@ namespace JobGame.UI
 
         IGameSession _session;
         string _message = "Sesi belum dimulai.";
+        Canvas _feedbackCanvas;
+        RectTransform _feedbackCanvasRect;
+        Transform _desktopPanel;
+        GameObject _slotBarRoot;
+        Image[] _slotSegments;
+        GameObject _toastRoot;
+        TMP_Text _toastText;
+        CanvasGroup _toastCanvasGroup;
+        Image _transitionOverlay;
+        CanvasGroup _transitionCanvasGroup;
+        Coroutine _toastRoutine;
+        Coroutine _transitionRoutine;
 
         public IGameSession Session { get { return _session; } }
         public event Action<IGameSession> SessionBound;
@@ -61,6 +74,7 @@ namespace JobGame.UI
         {
             HideConfirmationPanel();
             SetSlotAlertVisible(false);
+            EnsureFeedbackUi();
 
             AudioManager.Ensure(
                 bgmClip,
@@ -125,6 +139,22 @@ namespace JobGame.UI
                 loseQuitButton.onClick.RemoveListener(OnQuitClicked);
 
             Unsubscribe(_session);
+        }
+
+        public void ShowToast(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return;
+
+            EnsureFeedbackUi();
+            if (_toastText == null || _toastCanvasGroup == null)
+                return;
+
+            if (_toastRoutine != null)
+                StopCoroutine(_toastRoutine);
+
+            _toastText.text = message;
+            _toastRoutine = StartCoroutine(ShowToastRoutine());
         }
 
         public void Bind(IGameSession session)
@@ -292,6 +322,8 @@ namespace JobGame.UI
                 Debug.LogWarning(_message, this);
 
             Refresh();
+            if (result.Ok && label == "Tidur")
+                PlayEndWeekTransition();
         }
 
         void Refresh()
@@ -308,6 +340,7 @@ namespace JobGame.UI
                 if (energySlider != null)
                     energySlider.SetValueWithoutNotify(0f);
                 SetActionAvailability(false, false);
+                RefreshSlotBar(0);
                 return;
             }
 
@@ -330,6 +363,7 @@ namespace JobGame.UI
 
             bool planning = _session.Phase == GamePhase.Planning;
             SetActionAvailability(planning && _session.SlotsLeft > 0, planning);
+            RefreshSlotBar(_session.SlotsLeft);
         }
 
         void SetSlotAlertVisible(bool visible)
@@ -398,7 +432,11 @@ namespace JobGame.UI
 
         void OnStateChanged() { Refresh(); }
         void OnStateChanged(int unused) { Refresh(); }
-        void OnResourceChanged(ResourceKind kind, float oldValue, float newValue) { Refresh(); }
+        void OnResourceChanged(ResourceKind kind, float oldValue, float newValue)
+        {
+            ShowFloatingResourceChange(kind, newValue - oldValue);
+            Refresh();
+        }
         void OnMarketChanged(MarketEvent market) { Refresh(); }
         void OnApplicationUpdated(ApplicationRecord application) { Refresh(); }
         void OnPhaseChanged(GamePhase phase) { Refresh(); }
@@ -416,6 +454,278 @@ namespace JobGame.UI
             _message = summary.Headline;
             ShowOutcomePanels(summary);
             Refresh();
+        }
+
+        void EnsureFeedbackUi()
+        {
+            if (_feedbackCanvas != null)
+                return;
+
+            Canvas[] canvases = Resources.FindObjectsOfTypeAll<Canvas>();
+            for (int i = 0; i < canvases.Length; i++)
+            {
+                Canvas candidate = canvases[i];
+                if (candidate.isRootCanvas && candidate.gameObject.scene.IsValid())
+                {
+                    _feedbackCanvas = candidate;
+                    break;
+                }
+            }
+
+            if (_feedbackCanvas == null)
+            {
+                Debug.LogError("Feedback UI membutuhkan root Canvas.", this);
+                return;
+            }
+
+            _feedbackCanvasRect = _feedbackCanvas.transform as RectTransform;
+            GameObject desktopObject = GameObject.Find("Desktop");
+            _desktopPanel = desktopObject != null
+                ? desktopObject.transform
+                : _feedbackCanvas.transform;
+            CreateSlotBar();
+            CreateToast();
+            CreateTransitionOverlay();
+        }
+
+        void CreateSlotBar()
+        {
+            _slotBarRoot = new GameObject("Week Slot Bar", typeof(RectTransform), typeof(Image));
+            _slotBarRoot.transform.SetParent(_desktopPanel, false);
+            _slotBarRoot.transform.SetAsLastSibling();
+
+            RectTransform rootRect = _slotBarRoot.GetComponent<RectTransform>();
+            rootRect.anchorMin = new Vector2(0.5f, 1f);
+            rootRect.anchorMax = new Vector2(0.5f, 1f);
+            rootRect.pivot = new Vector2(0.5f, 1f);
+            rootRect.anchoredPosition = new Vector2(0f, -12f);
+            rootRect.sizeDelta = new Vector2(390f, 48f);
+            _slotBarRoot.GetComponent<Image>().color = new Color(0.07f, 0.15f, 0.2f, 0.9f);
+
+            GameObject labelObject = new GameObject("Week Slot Label", typeof(RectTransform));
+            labelObject.transform.SetParent(_slotBarRoot.transform, false);
+            TMP_Text label = labelObject.AddComponent<TextMeshProUGUI>();
+            CopyTextStyle(label, mentalValueText);
+            label.text = "WEEK SLOTS";
+            label.fontSize = 14f;
+            label.alignment = TextAlignmentOptions.Center;
+            label.color = Color.white;
+            label.raycastTarget = false;
+
+            RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+            labelRect.anchorMin = new Vector2(0f, 1f);
+            labelRect.anchorMax = new Vector2(1f, 1f);
+            labelRect.pivot = new Vector2(0.5f, 1f);
+            labelRect.anchoredPosition = new Vector2(0f, -2f);
+            labelRect.sizeDelta = new Vector2(-16f, 18f);
+
+            GameObject segmentRoot = new GameObject("Slot Segments", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            segmentRoot.transform.SetParent(_slotBarRoot.transform, false);
+            RectTransform segmentRect = segmentRoot.GetComponent<RectTransform>();
+            segmentRect.anchorMin = new Vector2(0f, 0f);
+            segmentRect.anchorMax = new Vector2(1f, 0f);
+            segmentRect.pivot = new Vector2(0.5f, 0f);
+            segmentRect.anchoredPosition = new Vector2(0f, 7f);
+            segmentRect.sizeDelta = new Vector2(-16f, 18f);
+
+            HorizontalLayoutGroup layout = segmentRoot.GetComponent<HorizontalLayoutGroup>();
+            layout.spacing = 5f;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = true;
+            layout.padding = new RectOffset(0, 0, 0, 0);
+
+            int slotCount = config != null ? Mathf.Max(1, config.SlotsPerWeek) : 3;
+            _slotSegments = new Image[slotCount];
+            for (int i = 0; i < _slotSegments.Length; i++)
+            {
+                GameObject segment = new GameObject("Slot " + (i + 1), typeof(RectTransform), typeof(Image));
+                segment.transform.SetParent(segmentRoot.transform, false);
+                _slotSegments[i] = segment.GetComponent<Image>();
+                _slotSegments[i].color = new Color(0.15f, 0.25f, 0.3f, 1f);
+            }
+        }
+
+        void CreateToast()
+        {
+            _toastRoot = new GameObject("Activity Toast", typeof(RectTransform), typeof(Image), typeof(CanvasGroup));
+            _toastRoot.transform.SetParent(_feedbackCanvas.transform, false);
+            RectTransform rect = _toastRoot.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0f);
+            rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, 70f);
+            rect.sizeDelta = new Vector2(560f, 64f);
+            _toastRoot.GetComponent<Image>().color = new Color(0.06f, 0.14f, 0.2f, 0.96f);
+            _toastCanvasGroup = _toastRoot.GetComponent<CanvasGroup>();
+            _toastCanvasGroup.alpha = 0f;
+            _toastRoot.SetActive(false);
+
+            GameObject textObject = new GameObject("Toast Text", typeof(RectTransform));
+            textObject.transform.SetParent(_toastRoot.transform, false);
+            _toastText = textObject.AddComponent<TextMeshProUGUI>();
+            CopyTextStyle(_toastText, stateText);
+            _toastText.fontSize = 20f;
+            _toastText.alignment = TextAlignmentOptions.Center;
+            _toastText.color = Color.white;
+            _toastText.raycastTarget = false;
+            RectTransform textRect = textObject.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(16f, 8f);
+            textRect.offsetMax = new Vector2(-16f, -8f);
+        }
+
+        void CreateTransitionOverlay()
+        {
+            GameObject overlay = new GameObject("Week Transition", typeof(RectTransform), typeof(Image), typeof(CanvasGroup));
+            overlay.transform.SetParent(_feedbackCanvas.transform, false);
+            RectTransform rect = overlay.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            overlay.GetComponent<Image>().color = Color.black;
+            _transitionOverlay = overlay.GetComponent<Image>();
+            _transitionCanvasGroup = overlay.GetComponent<CanvasGroup>();
+            _transitionCanvasGroup.alpha = 0f;
+            overlay.SetActive(false);
+        }
+
+        void RefreshSlotBar(int slotsLeft)
+        {
+            if (_slotSegments == null)
+                return;
+
+            for (int i = 0; i < _slotSegments.Length; i++)
+                _slotSegments[i].color = i < slotsLeft
+                    ? new Color(0f, 0.95f, 0.25f, 1f)
+                    : new Color(0.15f, 0.25f, 0.3f, 1f);
+        }
+
+        void ShowFloatingResourceChange(ResourceKind kind, float delta)
+        {
+            if (Mathf.Abs(delta) < 0.01f)
+                return;
+
+            EnsureFeedbackUi();
+            RectTransform target = GetResourceRect(kind);
+            if (target == null || _feedbackCanvasRect == null)
+                return;
+
+            GameObject valueObject = new GameObject("Resource Change", typeof(RectTransform), typeof(CanvasGroup));
+            valueObject.transform.SetParent(_feedbackCanvas.transform, false);
+            TMP_Text valueText = valueObject.AddComponent<TextMeshProUGUI>();
+            CopyTextStyle(valueText, mentalValueText);
+            valueText.text = (delta > 0f ? "+" : string.Empty) + FormatResourceValue(delta);
+            valueText.fontSize = 24f;
+            valueText.fontStyle = FontStyles.Bold;
+            valueText.color = delta < 0f
+                ? new Color(1f, 0.12f, 0.1f, 1f)
+                : new Color(0.1f, 1f, 0.25f, 1f);
+            valueText.raycastTarget = false;
+
+            RectTransform valueRect = valueObject.GetComponent<RectTransform>();
+            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(null, target.position);
+            Vector2 localPoint;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                _feedbackCanvasRect,
+                screenPoint,
+                null,
+                out localPoint);
+            valueRect.anchoredPosition = localPoint + new Vector2(55f, 20f);
+            valueRect.sizeDelta = new Vector2(100f, 36f);
+            StartCoroutine(FadeFloatingValue(valueObject, valueRect));
+        }
+
+        IEnumerator FadeFloatingValue(GameObject valueObject, RectTransform valueRect)
+        {
+            CanvasGroup group = valueObject.GetComponent<CanvasGroup>();
+            Vector2 start = valueRect.anchoredPosition;
+            float duration = 0.8f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float progress = Mathf.Clamp01(elapsed / duration);
+                valueRect.anchoredPosition = start + new Vector2(0f, progress * 35f);
+                group.alpha = 1f - progress;
+                yield return null;
+            }
+
+            Destroy(valueObject);
+        }
+
+        void PlayEndWeekTransition()
+        {
+            EnsureFeedbackUi();
+            if (_transitionCanvasGroup == null)
+                return;
+
+            if (_transitionRoutine != null)
+                StopCoroutine(_transitionRoutine);
+            _transitionRoutine = StartCoroutine(EndWeekTransitionRoutine());
+        }
+
+        IEnumerator EndWeekTransitionRoutine()
+        {
+            _transitionOverlay.gameObject.SetActive(true);
+            _transitionOverlay.transform.SetAsLastSibling();
+            yield return FadeCanvasGroup(_transitionCanvasGroup, 0f, 1f, 0.35f);
+            yield return new WaitForSecondsRealtime(0.15f);
+            yield return FadeCanvasGroup(_transitionCanvasGroup, 1f, 0f, 0.35f);
+            _transitionOverlay.gameObject.SetActive(false);
+            _transitionRoutine = null;
+        }
+
+        IEnumerator ShowToastRoutine()
+        {
+            _toastRoot.SetActive(true);
+            _toastRoot.transform.SetAsLastSibling();
+            yield return FadeCanvasGroup(_toastCanvasGroup, 0f, 1f, 0.2f);
+            yield return new WaitForSecondsRealtime(2.4f);
+            yield return FadeCanvasGroup(_toastCanvasGroup, 1f, 0f, 0.25f);
+            _toastRoot.SetActive(false);
+            _toastRoutine = null;
+        }
+
+        static IEnumerator FadeCanvasGroup(CanvasGroup group, float from, float to, float duration)
+        {
+            float elapsed = 0f;
+            group.alpha = from;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                group.alpha = Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / duration));
+                yield return null;
+            }
+            group.alpha = to;
+        }
+
+        RectTransform GetResourceRect(ResourceKind kind)
+        {
+            if (kind == ResourceKind.Mental)
+                return mentalValueText != null ? mentalValueText.rectTransform : null;
+            if (kind == ResourceKind.Energy)
+                return energySlider != null ? energySlider.GetComponent<RectTransform>() : null;
+            return runwayValueText != null ? runwayValueText.rectTransform : null;
+        }
+
+        static string FormatResourceValue(float value)
+        {
+            return Mathf.Abs(value % 1f) < 0.01f
+                ? Mathf.RoundToInt(Mathf.Abs(value)).ToString()
+                : Mathf.Abs(value).ToString("0.#");
+        }
+
+        static void CopyTextStyle(TMP_Text target, TMP_Text source)
+        {
+            if (target == null || source == null)
+                return;
+
+            target.font = source.font;
+            target.fontStyle = source.fontStyle;
+            target.characterSpacing = source.characterSpacing;
+            target.enableAutoSizing = false;
         }
 
         void HideOutcomePanels()

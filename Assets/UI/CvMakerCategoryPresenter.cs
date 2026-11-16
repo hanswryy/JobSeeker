@@ -141,6 +141,7 @@ namespace JobGame.UI
                 applyButton.onClick.AddListener(OnApplyClicked);
 
             sessionPresenter.SessionBound += Bind;
+            ResetDraftForNewPosting();
             Bind(sessionPresenter.Session);
         }
 
@@ -391,6 +392,13 @@ namespace JobGame.UI
             Refresh();
         }
 
+        internal void ResetDraftForNewPosting()
+        {
+            _draft = new CvDraft();
+            ClearDragState();
+            RefreshSelection();
+        }
+
         void RefreshCategoryTabs()
         {
             SetCategoryTabState(skillsTabButton, _activeCategory == Category.Skills);
@@ -498,6 +506,14 @@ namespace JobGame.UI
             ReportApplyResult(message, result.Ok);
             if (result.Ok)
             {
+                string jobTitle = posting.Template != null &&
+                    !string.IsNullOrEmpty(posting.Template.Title)
+                    ? posting.Template.Title
+                    : posting.Id;
+                if (sessionPresenter != null)
+                    sessionPresenter.ShowToast(
+                        "You have applied to " + jobTitle + " job, good luck!");
+
                 if (panelNavigator != null)
                     panelNavigator.ShowDesktop();
                 else
@@ -698,6 +714,7 @@ namespace JobGame.UI
                 SetSelectionSlotVisual(_skillSelectionSlots[i], hasCard);
                 _skillSelectionSlots[i].gameObject.SetActive(i < _skillSelectionCapacity);
             }
+            skillsDropZone.SetInstructionVisible(_draft.Skills.Count == 0);
         }
 
         void RefreshExperienceSelection()
@@ -711,6 +728,7 @@ namespace JobGame.UI
                 SetSelectionSlotVisual(_experienceSelectionSlots[i], hasCard);
                 _experienceSelectionSlots[i].gameObject.SetActive(i < _experienceSelectionCapacity);
             }
+            experiencesDropZone.SetInstructionVisible(_draft.Experiences.Count == 0);
         }
 
         static void SetSelectionSlotVisual(Transform slot, bool filled)
