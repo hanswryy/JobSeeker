@@ -29528,7 +29528,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: LET'S FILL YOUR COMPETENCE
+  m_text: DRAG A CARD INTO A SLOT BELOW
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
   m_sharedMaterial: {fileID: 3040108758198482946, guid: 5a060c77f4274ef4c98edbbd9ccd34bd, type: 2}
@@ -33181,6 +33181,7 @@ MonoBehaviour:
   - {fileID: 53950593}
   skillsDropZone: {fileID: 69854113}
   experiencesDropZone: {fileID: 194505453}
+  dashedDropZoneSprite: {fileID: 21300000, guid: 00b9c3fc8348dc2448514c3e6fe9cd48, type: 3}
   dragCanvas: {fileID: 2097182174}
 --- !u!4 &2017171321
 Transform:

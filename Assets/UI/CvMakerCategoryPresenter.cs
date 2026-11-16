@@ -31,15 +31,17 @@ namespace JobGame.UI
         [Header("CV Drop Areas")]
         [SerializeField] CvMakerDropZone skillsDropZone;
         [SerializeField] CvMakerDropZone experiencesDropZone;
+        [SerializeField] Sprite dashedDropZoneSprite;
 
         [Header("Drag Preview")]
         [SerializeField] Canvas dragCanvas;
 
-        readonly GameObject[] _itemBoxes = new GameObject[VisibleItemCount];
-        readonly TMP_Text[] _itemLabels = new TMP_Text[VisibleItemCount];
-        readonly SkillTag[] _displayedSkills = new SkillTag[VisibleItemCount];
-        readonly bool[] _hasDisplayedSkills = new bool[VisibleItemCount];
-        readonly ExperienceCard[] _displayedExperiences = new ExperienceCard[VisibleItemCount];
+        readonly List<GameObject> _itemBoxes = new List<GameObject>();
+        readonly List<TMP_Text> _itemLabels = new List<TMP_Text>();
+        readonly List<SkillTag> _displayedSkills = new List<SkillTag>();
+        readonly List<bool> _hasDisplayedSkills = new List<bool>();
+        readonly List<ExperienceCard> _displayedExperiences = new List<ExperienceCard>();
+        readonly List<CvMakerDragSource> _inventorySources = new List<CvMakerDragSource>();
         readonly List<Transform> _skillSelectionSlots = new List<Transform>();
         readonly List<TMP_Text> _skillSelectionLabels = new List<TMP_Text>();
         readonly List<string> _skillSelectionPlaceholders = new List<string>();
@@ -64,6 +66,8 @@ namespace JobGame.UI
         int _configuredExperienceSlotCount;
         int _skillSelectionCapacity;
         int _experienceSelectionCapacity;
+        RectTransform _inventoryViewport;
+        RectTransform _inventoryContent;
 
         enum Category
         {
@@ -94,6 +98,7 @@ namespace JobGame.UI
 
             if (!ResolveInventoryCards())
                 return;
+            ConfigureInventoryScrolling();
 
             skillsDropZone.Bind(this, false);
             experiencesDropZone.Bind(this, true);
@@ -103,23 +108,26 @@ namespace JobGame.UI
                     _skillSelectionSlots,
                     _skillSelectionLabels,
                     _skillSelectionPlaceholders,
-                    "[SKILL ") ||
+                    "[SKILL SLOT ") ||
                 !ResolveSelectionSlots(
                     experiencesDropZone,
                     _experienceSelectionSlots,
                     _experienceSelectionLabels,
                     _experienceSelectionPlaceholders,
-                    "[EXPERIENCES "))
+                    "[EXPERIENCE SLOT "))
                 return;
 
             _skillSelectionCapacity = _skillSelectionSlots.Count;
             _experienceSelectionCapacity = _experienceSelectionSlots.Count;
             MakeDropZoneRaycastable(skillsDropZone);
             MakeDropZoneRaycastable(experiencesDropZone);
+            skillsDropZone.ConfigureVisual(dashedDropZoneSprite, "DRAG SKILLS HERE");
+            experiencesDropZone.ConfigureVisual(dashedDropZoneSprite, "DRAG EXPERIENCES HERE");
 
             _isConfigured = true;
             ClearLabels();
             RefreshSelection();
+            RefreshCategoryTabs();
         }
 
         void OnEnable()
@@ -179,9 +187,9 @@ namespace JobGame.UI
                 Debug.LogError("Assign tombol Skills Tab dan Experiences Tab pada Inspector.", this);
                 valid = false;
             }
-            if (inventoryCards == null || inventoryCards.Length != VisibleItemCount)
+            if (inventoryCards == null || inventoryCards.Length == 0)
             {
-                Debug.LogError("Inventory Cards harus berisi tepat 6 komponen CvMakerDragSource.", this);
+                Debug.LogError("Inventory Cards harus berisi minimal satu komponen CvMakerDragSource.", this);
                 valid = false;
             }
             else
@@ -220,8 +228,9 @@ namespace JobGame.UI
             for (int i = 0; i < inventoryCards.Length; i++)
             {
                 CvMakerDragSource source = inventoryCards[i];
-                _itemBoxes[i] = source.gameObject;
-                _itemLabels[i] = source.GetComponentInChildren<TMP_Text>(true);
+                _inventorySources.Add(source);
+                _itemBoxes.Add(source.gameObject);
+                _itemLabels.Add(source.GetComponentInChildren<TMP_Text>(true));
 
                 if (_itemLabels[i] == null)
                 {
@@ -241,6 +250,75 @@ namespace JobGame.UI
             }
 
             return valid;
+        }
+
+        void ConfigureInventoryScrolling()
+        {
+            _inventoryViewport = inventoryCards[0].transform.parent as RectTransform;
+            if (_inventoryViewport == null)
+            {
+                Debug.LogError("Inventory Cards harus memiliki parent RectTransform.", this);
+                return;
+            }
+
+            ScrollRect scrollRect = _inventoryViewport.GetComponent<ScrollRect>();
+            if (scrollRect == null)
+                scrollRect = _inventoryViewport.gameObject.AddComponent<ScrollRect>();
+
+            if (_inventoryViewport.GetComponent<RectMask2D>() == null)
+                _inventoryViewport.gameObject.AddComponent<RectMask2D>();
+
+            _inventoryContent = new GameObject("Inventory Content", typeof(RectTransform)).GetComponent<RectTransform>();
+            _inventoryContent.SetParent(_inventoryViewport, false);
+            _inventoryContent.anchorMin = new Vector2(0f, 0f);
+            _inventoryContent.anchorMax = new Vector2(0f, 1f);
+            _inventoryContent.pivot = new Vector2(0f, 0.5f);
+            _inventoryContent.anchoredPosition = Vector2.zero;
+            _inventoryContent.sizeDelta = new Vector2(0f, 0f);
+
+            HorizontalLayoutGroup viewportLayout = _inventoryViewport.GetComponent<HorizontalLayoutGroup>();
+            HorizontalLayoutGroup contentLayout = _inventoryContent.gameObject.AddComponent<HorizontalLayoutGroup>();
+            if (viewportLayout != null)
+            {
+                contentLayout.padding = viewportLayout.padding;
+                contentLayout.spacing = viewportLayout.spacing;
+                contentLayout.childAlignment = viewportLayout.childAlignment;
+                contentLayout.childControlWidth = viewportLayout.childControlWidth;
+                contentLayout.childControlHeight = viewportLayout.childControlHeight;
+                contentLayout.childForceExpandWidth = viewportLayout.childForceExpandWidth;
+                contentLayout.childForceExpandHeight = viewportLayout.childForceExpandHeight;
+                contentLayout.childScaleWidth = viewportLayout.childScaleWidth;
+                contentLayout.childScaleHeight = viewportLayout.childScaleHeight;
+                viewportLayout.enabled = false;
+            }
+
+            ContentSizeFitter contentSize = _inventoryContent.gameObject.AddComponent<ContentSizeFitter>();
+            contentSize.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            contentSize.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            for (int i = 0; i < _inventorySources.Count; i++)
+                _inventorySources[i].transform.SetParent(_inventoryContent, false);
+
+            scrollRect.viewport = _inventoryViewport;
+            scrollRect.content = _inventoryContent;
+            scrollRect.horizontal = true;
+            scrollRect.vertical = false;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.scrollSensitivity = 30f;
+        }
+
+        void EnsureInventoryCapacity(int capacity)
+        {
+            while (_inventorySources.Count < capacity)
+            {
+                CvMakerDragSource clone = Instantiate(_inventorySources[0], _inventoryContent, false);
+                clone.name = "Inventory Card " + (_inventorySources.Count + 1);
+                clone.gameObject.SetActive(false);
+                _inventorySources.Add(clone);
+                _itemBoxes.Add(clone.gameObject);
+                _itemLabels.Add(clone.GetComponentInChildren<TMP_Text>(true));
+                clone.Bind(this, _inventorySources.Count - 1);
+            }
         }
 
         bool ResolveSelectionSlots(
@@ -266,9 +344,7 @@ namespace JobGame.UI
 
                 slots.Add(slot);
                 labels.Add(label);
-                placeholders.Add(string.IsNullOrEmpty(label.text)
-                    ? placeholderPrefix + slots.Count + "]"
-                    : label.text);
+                placeholders.Add(placeholderPrefix + slots.Count + "]");
             }
 
             if (slots.Count == 0)
@@ -304,13 +380,56 @@ namespace JobGame.UI
         void ShowSkills()
         {
             _activeCategory = Category.Skills;
+            RefreshCategoryTabs();
             Refresh();
         }
 
         void ShowExperiences()
         {
             _activeCategory = Category.Experiences;
+            RefreshCategoryTabs();
             Refresh();
+        }
+
+        void RefreshCategoryTabs()
+        {
+            SetCategoryTabState(skillsTabButton, _activeCategory == Category.Skills);
+            SetCategoryTabState(experiencesTabButton, _activeCategory == Category.Experiences);
+        }
+
+        static void SetCategoryTabState(Button button, bool active)
+        {
+            if (button == null)
+                return;
+
+            ColorBlock colors = button.colors;
+            colors.normalColor = active
+                ? new Color(0.31f, 0.62f, 0.37f, 1f)
+                : new Color(0.12f, 0.31f, 0.24f, 1f);
+            colors.highlightedColor = active
+                ? new Color(0.42f, 0.76f, 0.46f, 1f)
+                : new Color(0.22f, 0.46f, 0.34f, 1f);
+            colors.pressedColor = new Color(0.55f, 0.82f, 0.46f, 1f);
+            colors.selectedColor = colors.highlightedColor;
+            button.colors = colors;
+
+            Graphic graphic = button.targetGraphic != null
+                ? button.targetGraphic
+                : button.GetComponent<Graphic>();
+            if (graphic != null)
+                graphic.color = colors.normalColor;
+
+            Outline outline = button.GetComponent<Outline>();
+            if (outline == null)
+                outline = button.gameObject.AddComponent<Outline>();
+            outline.effectColor = active
+                ? new Color(0.75f, 1f, 0.62f, 1f)
+                : new Color(0.08f, 0.23f, 0.18f, 1f);
+            outline.effectDistance = new Vector2(2f, -2f);
+
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
+                label.color = active ? Color.white : new Color(0.75f, 1f, 0.62f, 1f);
         }
 
         void OnApplyClicked()
@@ -405,8 +524,9 @@ namespace JobGame.UI
         void Refresh()
         {
             ClearLabels();
-            Array.Clear(_hasDisplayedSkills, 0, _hasDisplayedSkills.Length);
-            Array.Clear(_displayedExperiences, 0, _displayedExperiences.Length);
+            _displayedSkills.Clear();
+            _hasDisplayedSkills.Clear();
+            _displayedExperiences.Clear();
 
             if (_session == null)
             {
@@ -423,7 +543,14 @@ namespace JobGame.UI
                     return;
                 }
 
-                int count = Mathf.Min(VisibleItemCount, skills.Count);
+                EnsureInventoryCapacity(skills.Count);
+                for (int i = 0; i < _inventorySources.Count; i++)
+                {
+                    _displayedSkills.Add(default(SkillTag));
+                    _hasDisplayedSkills.Add(false);
+                }
+
+                int count = skills.Count;
                 for (int i = 0; i < count; i++)
                 {
                     _displayedSkills[i] = skills[i];
@@ -440,7 +567,11 @@ namespace JobGame.UI
                     return;
                 }
 
-                int count = Mathf.Min(VisibleItemCount, experiences.Count);
+                EnsureInventoryCapacity(experiences.Count);
+                for (int i = 0; i < _inventorySources.Count; i++)
+                    _displayedExperiences.Add(null);
+
+                int count = experiences.Count;
                 for (int i = 0; i < count; i++)
                 {
                     ExperienceCard card = experiences[i];
@@ -563,7 +694,8 @@ namespace JobGame.UI
                 bool hasCard = i < _draft.Skills.Count;
                 _skillSelectionLabels[i].text = hasCard
                     ? _draft.Skills[i].DisplayName()
-                    : _skillSelectionPlaceholders[i];
+                    : string.Empty;
+                SetSelectionSlotVisual(_skillSelectionSlots[i], hasCard);
                 _skillSelectionSlots[i].gameObject.SetActive(i < _skillSelectionCapacity);
             }
         }
@@ -575,15 +707,29 @@ namespace JobGame.UI
                 bool hasCard = i < _draft.Experiences.Count;
                 _experienceSelectionLabels[i].text = hasCard
                     ? _draft.Experiences[i].DisplayName
-                    : _experienceSelectionPlaceholders[i];
+                    : string.Empty;
+                SetSelectionSlotVisual(_experienceSelectionSlots[i], hasCard);
                 _experienceSelectionSlots[i].gameObject.SetActive(i < _experienceSelectionCapacity);
             }
+        }
+
+        static void SetSelectionSlotVisual(Transform slot, bool filled)
+        {
+            Graphic graphic = slot.GetComponent<Graphic>();
+            if (graphic != null)
+                graphic.color = filled
+                    ? new Color(0.21f, 0.46f, 0.34f, 1f)
+                    : new Color(1f, 1f, 1f, 0f);
+
+            TMP_Text label = slot.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
+                label.color = filled ? Color.white : new Color(0f, 0f, 0f, 0f);
         }
 
         internal void BeginDrag(int index, PointerEventData eventData)
         {
             ClearDragState();
-            if (index < 0 || index >= _itemBoxes.Length || _session == null)
+            if (index < 0 || index >= _itemBoxes.Count || _session == null)
                 return;
 
             if (_activeCategory == Category.Skills)
@@ -605,6 +751,7 @@ namespace JobGame.UI
             }
 
             _hasDraggedCard = true;
+            SetDropZoneHover(_draggedCategory == Category.Experiences, true);
             CreateDragGhost(_itemBoxes[index], eventData);
         }
 
@@ -621,7 +768,17 @@ namespace JobGame.UI
 
             _dragGhost = null;
             _dragGhostRect = null;
+            skillsDropZone.SetFeedback(false);
+            experiencesDropZone.SetFeedback(false);
             _clearDragPayloadInLateUpdate = _hasDraggedCard;
+        }
+
+        internal void SetDropZoneHover(bool experienceZone, bool hovered)
+        {
+            CvMakerDropZone zone = experienceZone ? experiencesDropZone : skillsDropZone;
+            Category zoneCategory = experienceZone ? Category.Experiences : Category.Skills;
+            bool matchingDrag = _hasDraggedCard && _draggedCategory == zoneCategory;
+            zone.SetFeedback(matchingDrag || (!_hasDraggedCard && hovered));
         }
 
         internal void DropOnSkills()
@@ -788,6 +945,10 @@ namespace JobGame.UI
             _hasDraggedCard = false;
             _clearDragPayloadInLateUpdate = false;
             _draggedExperience = null;
+            if (skillsDropZone != null)
+                skillsDropZone.SetFeedback(false);
+            if (experiencesDropZone != null)
+                experiencesDropZone.SetFeedback(false);
         }
 
         void ClearDragPayload()
@@ -798,7 +959,7 @@ namespace JobGame.UI
 
         void ClearLabels()
         {
-            for (int i = 0; i < _itemLabels.Length; i++)
+            for (int i = 0; i < _itemLabels.Count; i++)
                 SetLabel(i, string.Empty);
         }
 
