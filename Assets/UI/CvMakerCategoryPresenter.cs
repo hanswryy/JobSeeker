@@ -850,6 +850,7 @@ namespace JobGame.UI
 
             _draft.Skills.Add(_draggedSkill);
             RefreshSelection();
+            PlayDropSfx();
         }
 
         void AddDraggedExperience()
@@ -898,6 +899,13 @@ namespace JobGame.UI
 
             _draft.Experiences.Add(_draggedExperience);
             RefreshSelection();
+            PlayDropSfx();
+        }
+
+        static void PlayDropSfx()
+        {
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySelect();
         }
 
         void RemoveSkillAt(int index)
